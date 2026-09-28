@@ -11,7 +11,7 @@
 **The next-generation, high-performance automated AFK reward & Twitch drops engine.**  
 *Completely redesigned with an ultra-modern reactive Web GUI, multi-language engine, authoritative account linking, and intelligent drop routing.*
 
-[📥 Download Executable](#-direct-downloads-v100-beta) • [✨ What Was Done](#-what-was-done--key-enhancements) • [📖 How to Use](#-how-to-use-step-by-step) • [🇹🇷 Türkçe Açıklama](#-türkçe-özet--kullanım-kılavuzu)
+[📦 Releases](https://github.com/bybcz/twitchdrops/releases) • [✨ What Was Done](#-what-was-done--key-enhancements) • [📖 How to Use](#-how-to-use-step-by-step) • [🇹🇷 Türkçe Açıklama](#-türkçe-özet--kullanım-kılavuzu)
 
 </div>
 
@@ -19,18 +19,8 @@
 
 > [!NOTE]
 > **Beta Release Status (`v1.0.0-beta`)**: This program is under active development by **By BCZ**. New features, additional language localizations, and game linking mappings are continuously updated. Feedback and contributions are welcome!
-
----
-
-## 📥 Direct Downloads (`v1.0.0-beta`)
-
-You can download the pre-compiled portable application in your preferred format:
-
-| Package | Format | Direct Download Link | Description |
-| :--- | :---: | :--- | :--- |
-| **Executable** | `.exe` | [**Download TwitchDropsMinerPro.exe**](https://github.com/bybcz/twitchdrops/raw/main/releases/TwitchDropsMinerPro.exe) | Single standalone executable (No installation required) |
-| **ZIP Archive** | `.zip` | [**Download TwitchDropsMinerPro-ByBCZ.zip**](https://github.com/bybcz/twitchdrops/raw/main/releases/TwitchDropsMinerPro-ByBCZ.zip) | Portable standard zip package |
-| **RAR Archive** | `.rar` | [**Download TwitchDropsMinerPro-ByBCZ.rar**](https://github.com/bybcz/twitchdrops/raw/main/releases/TwitchDropsMinerPro-ByBCZ.rar) | High-compression WinRAR package |
+>
+> 📥 **Downloads**: Pre-compiled packages (`.exe`, `.zip`, `.rar`) are available directly in the **[Releases](https://github.com/bybcz/twitchdrops/releases)** section on the right sidebar. New versions and updates will be published there consecutively.
 
 ---
 
@@ -86,7 +76,7 @@ You can download the pre-compiled portable application in your preferred format:
 ## 📖 How to Use (Step-by-Step)
 
 ### Step 1: Launch Application
-Download `TwitchDropsMinerPro.exe` and double-click to start. No Python installation or runtime setup is required.
+Download the latest version (`.exe`, `.zip`, or `.rar`) from the **[Releases](https://github.com/bybcz/twitchdrops/releases)** section on the right sidebar and double-click to start. No Python installation or runtime setup is required.
 
 ### Step 2: Authenticate Your Twitch Account
 1. Navigate to the **Login / Account** tab (or click **Login 🔑** in the top header).
@@ -136,10 +126,6 @@ twitchdrops/
 │       └── sounds/              # Audio Chimes & Feedback
 ├── icons/                       # Application Icons
 ├── lang/                        # Extended Translation Dictionaries
-├── releases/                    # Compiled Executables & Archives
-│   ├── TwitchDropsMinerPro.exe
-│   ├── TwitchDropsMinerPro-ByBCZ.zip
-│   └── TwitchDropsMinerPro-ByBCZ.rar
 ├── main.py                      # Application Entry Point
 ├── build.spec                   # PyInstaller Build Specification
 └── requirements.txt             # Python Dependencies
@@ -181,7 +167,7 @@ The resulting executable will be created at `dist/TwitchDropsMinerPro.exe`.
 6. **Otomatik Ödül & Kanal Puanı Toplama:** +50 kanal bonus puanları ve %100 olan drop ödülleri arka planda otomatik olarak toplanır.
 
 ### 🎮 Nasıl Kullanılır?
-1. [**TwitchDropsMinerPro.exe**](https://github.com/bybcz/twitchdrops/raw/main/releases/TwitchDropsMinerPro.exe) dosyasını indirin ve çalıştırın.
+1. Sağ taraftaki **[Releases](https://github.com/bybcz/twitchdrops/releases)** bölümünden güncel sürümü (`.exe`, `.zip` veya `.rar`) indirin ve çalıştırın.
 2. **Login** sekmesinden **Device Code** oluşturun, kodu kopyalayıp açılan Twitch sayfasında onaylayarak giriş yapın.
 3. **Priority** sekmesinden kasmak istediğiniz oyunları öncelik sırasına ekleyin.
 4. Sağ üstteki veya paneldeki **Start ▶** butonuna basarak madenciliği başlatın.
@@ -199,4 +185,5 @@ This software is an unofficial, independent open-source automation utility and i
 
 - **Developer & Creator**: **By BCZ** ([@bybcz](https://github.com/bybcz))
 - **Repository**: [https://github.com/bybcz/twitchdrops](https://github.com/bybcz/twitchdrops)
-- **Release Version**: `v1.0.0-beta`
+- **Releases**: [https://github.com/bybcz/twitchdrops/releases](https://github.com/bybcz/twitchdrops/releases)
+- **Current Version**: `v1.0.0-beta`

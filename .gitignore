@@ -39,6 +39,7 @@ log.txt
 *.log
 cache/
 mapping.json
+releases/
 
 # IDE and OS files
 .vscode/
