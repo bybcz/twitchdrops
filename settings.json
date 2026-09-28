@@ -1,0 +1,29 @@
+{
+    "autostart_tray": false,
+    "available_drops_check": false,
+    "claim_channel_points": true,
+    "connection_quality": 1,
+    "dark_mode": true,
+    "discord_webhook": "",
+    "enable_badges_emotes": false,
+    "exclude": {
+        "__type": "set",
+        "data": []
+    },
+    "language": "en",
+    "notify_on_campaign_completed": true,
+    "notify_on_channel_points": false,
+    "notify_on_drop_claim": true,
+    "priority": [],
+    "priority_mode": {
+        "__type": "PriorityMode",
+        "data": 0
+    },
+    "proxy": {
+        "__type": "URL",
+        "data": ""
+    },
+    "telegram_bot_token": "",
+    "telegram_chat_id": "",
+    "tray_notifications": true
+}

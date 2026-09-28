@@ -1,0 +1,10 @@
+aiohttp>=3.9.0
+pywebview>=5.0.0
+bottle>=0.12.25
+pythonnet>=3.0.0; sys_platform == 'win32'
+pystray>=0.19.5; sys_platform == 'win32'
+Pillow>=10.0.0
+yarl>=1.9.0
+multidict>=6.0.0
+typing_extensions>=4.8.0
+pyinstaller>=6.0.0

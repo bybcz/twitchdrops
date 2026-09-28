@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Twitch Drops Miner Pro (By BCZ)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark">
+
+  <!-- Application Header -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="brand-logo">⛏️</div>
+      <div class="brand-title">
+        <h1>
+          TWITCH DROPS MINER PRO
+          <span class="by-bcz-badge">By BCZ</span>
+        </h1>
+        <span class="brand-subtitle" id="brand-sub" data-i18n="brand_sub">Next-Gen Automated AFK Mining &amp; Rewards Engine</span>
+      </div>
+    </div>
+
+    <div class="header-stats">
+      <div class="status-badge" id="status-badge">
+        <span class="status-dot idle" id="status-dot"></span>
+        <span id="status-text" data-i18n="status_starting">Starting...</span>
+      </div>
+
+      <div class="stat-chip drops" title="Claimed drops in this session">
+        <span>🎁</span>
+        <span id="stat-claimed-drops">0 Drop</span>
+      </div>
+
+      <div class="stat-chip points" title="Live channel points claimed (+50)">
+        <span>🪙</span>
+        <span id="stat-points">0 Points</span>
+      </div>
+
+      <div class="stat-chip ws" title="Active WebSocket Connection">
+        <span>⚡</span>
+        <span id="stat-ws">0 WS</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Quick Auth Button in Header -->
+      <button class="btn btn-auth-header not-connected" id="header-auth-btn" title="Twitch Account Status">
+        <span id="header-auth-icon">🔑</span>
+        <span id="header-auth-label" data-i18n="header_login">Login</span>
+      </button>
+
+      <button class="btn btn-secondary btn-icon" id="btn-theme" title="Switch Theme (Dark/Light)">
+        🌙
+      </button>
+      <button class="btn btn-secondary" id="btn-reload" title="Reload Campaigns" data-i18n="btn_reload">
+        🔄 Reload
+      </button>
+      <button class="btn btn-twitch" id="btn-toggle-mining">
+        <span>▶</span> <span id="toggle-mining-label" data-i18n="btn_start">Start</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Application Container -->
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <nav class="app-sidebar">
+
+      <!-- User Profile Box -->
+      <div class="sidebar-profile" id="sidebar-profile" title="Twitch Account Info">
+        <div class="sidebar-avatar-wrap">
+          <div class="sidebar-avatar" id="sidebar-user-avatar">⛏️</div>
+          <span class="sidebar-online-dot" id="sidebar-online-dot"></span>
+        </div>
+        <div class="sidebar-profile-info">
+          <div class="sidebar-username" id="sidebar-username" data-i18n="auth_disconnected">Not Connected</div>
+          <div class="sidebar-role" id="sidebar-role" data-i18n="auth_no_connection">No Connection</div>
+        </div>
+      </div>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label" data-i18n="nav_main_menu">MAIN MENU</div>
+
+      <div class="nav-item active" data-tab="dashboard">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label" data-i18n="nav_dashboard">Dashboard</span>
+      </div>
+
+      <div class="nav-item" data-tab="inventory">
+        <span class="nav-icon">🎒</span>
+        <span class="nav-label" data-i18n="nav_inventory">Inventory</span>
+        <span class="badge" id="nav-badge-campaigns">0</span>
+      </div>
+
+      <div class="nav-item" data-tab="channels">
+        <span class="nav-icon">📺</span>
+        <span class="nav-label" data-i18n="nav_channels">Streamers</span>
+        <span class="badge" id="nav-badge-channels">0</span>
+      </div>
+
+      <!-- Prominent Twitch Login Menu Item -->
+      <div class="nav-item nav-item-highlight" data-tab="login" id="nav-item-login">
+        <span class="nav-icon">🔑</span>
+        <span class="nav-label" data-i18n="nav_account">Twitch Account</span>
+        <span class="badge badge-auth" id="nav-badge-auth" data-i18n="header_login">Login</span>
+      </div>
+
+      <div class="nav-item" data-tab="console">
+        <span class="nav-icon">💻</span>
+        <span class="nav-label" data-i18n="nav_console">Terminal &amp; Logs</span>
+      </div>
+
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section-label" data-i18n="nav_system">SYSTEM</div>
+
+      <div class="nav-item" data-tab="settings">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label" data-i18n="nav_settings">Settings</span>
+      </div>
+
+      <div class="nav-item" data-tab="about">
+        <span class="nav-icon">ℹ️</span>
+        <span class="nav-label" data-i18n="nav_about">About &amp; Help</span>
+      </div>
+
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-version">v1.0.0-beta • By BCZ</div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="app-content">
+
+      <!-- TAB 1: DASHBOARD -->
+      <section class="tab-pane active" id="tab-dashboard">
+        
+        <!-- Not Logged In Alert Banner (Shown when not connected) -->
+        <div class="auth-alert-banner" id="dashboard-auth-alert" style="display:none;">
+          <div class="auth-alert-icon">⚠️</div>
+          <div class="auth-alert-body">
+            <strong data-i18n="dash_alert_title">Twitch Account Not Connected!</strong>
+            <span data-i18n="dash_alert_desc">Please connect your Twitch account to start earning drops and watching streams automatically.</span>
+          </div>
+          <button class="btn btn-twitch btn-sm" id="btn-banner-go-login" data-i18n="dash_alert_btn">
+            🔑 Connect Now
+          </button>
+        </div>
+
+        <!-- Live Watching Banner -->
+        <div class="watching-banner">
+          <div class="streamer-profile">
+            <div class="streamer-avatar-box">
+              <img src="" alt="Avatar" class="streamer-avatar" id="watching-avatar" style="display:none;">
+              <div class="streamer-avatar-fallback" id="watching-avatar-fallback">
+                <span class="avatar-letter" id="watching-avatar-letter">📺</span>
+              </div>
+              <span class="live-pill" id="watching-live-badge" data-i18n="status_offline">OFFLINE</span>
+            </div>
+            <div class="streamer-info">
+              <div class="streamer-name">
+                <span id="watching-channel-name" data-i18n="watching_waiting">Waiting for Streamer...</span>
+              </div>
+              <div class="game-title" id="watching-game-title"><span data-i18n="watching_game_prefix">Game:</span> -</div>
+              <div class="stream-stats">
+                <span>👥 <strong id="watching-viewers">0</strong> <span data-i18n="watching_viewers">Viewers</span></span>
+                <span>⏱️ <span data-i18n="watching_uptime">Uptime:</span> <strong id="watching-uptime">00:00</strong></span>
+                <span>🎮 <span data-i18n="watching_priority">Priority:</span> <strong id="watching-priority-label">-</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <button class="btn btn-secondary" id="btn-open-stream" data-i18n="btn_watch_twitch">
+              🔗 Watch on Twitch
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Drop Showcase Grid -->
+        <div class="drop-showcase-grid">
+          
+          <!-- Drop Card -->
+          <div class="active-drop-card glass-card">
+            <div class="drop-thumbnail-box">
+              <img src="" alt="Drop" class="drop-thumbnail" id="active-drop-img" style="display:none;">
+              <span id="active-drop-placeholder" style="font-size: 32px;">🎁</span>
+            </div>
+
+            <div class="drop-details">
+              <div class="drop-campaign-badge" id="active-campaign-title" data-i18n="drop_showcase_title">ACTIVE DROP CAMPAIGN</div>
+              <div class="drop-name" id="active-drop-name" data-i18n="drop_none_active">No drop currently in progress</div>
+              
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="active-progress-bar" style="width: 0%;"></div>
+              </div>
+
+              <div class="drop-meta-info">
+                <span><span data-i18n="drop_progress_label">Progress:</span> <strong id="active-progress-text">0 / 0 min</strong></span>
+                <span class="drop-eta" id="active-eta-text"><span data-i18n="drop_eta_label">Remaining Time:</span> --</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Radial Progress Indicator -->
+          <div class="radial-progress-box glass-card">
+            <svg class="radial-svg" viewBox="0 0 80 80">
+              <defs>
+                <linearGradient id="purple-green-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#9146ff" />
+                  <stop offset="100%" stop-color="#00f59b" />
+                </linearGradient>
+              </defs>
+              <circle class="radial-bg" cx="40" cy="40" r="34" />
+              <circle class="radial-fill" id="radial-fill-circle" cx="40" cy="40" r="34" />
+            </svg>
+            <div class="radial-percentage" id="radial-percentage-text">0%</div>
+            <div class="radial-label" data-i18n="drop_completed_badge">COMPLETION</div>
+          </div>
+
+        </div>
+
+        <!-- Live Channels Mini List -->
+        <div class="glass-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span>📺</span>
+              <span data-i18n="channels_title">Live Stream Channels</span>
+            </div>
+            <span style="font-size: 12px; color: var(--text-secondary);" id="channels-summary-text">0 channels found</span>
+          </div>
+
+          <div class="channels-table-container">
+            <table class="channels-table">
+              <thead>
+                <tr>
+                  <th data-i18n="table_streamer">Streamer</th>
+                  <th data-i18n="table_title">Title</th>
+                  <th data-i18n="table_viewers">Viewers</th>
+                  <th data-i18n="table_status">Status</th>
+                  <th data-i18n="table_action">Action</th>
+                </tr>
+              </thead>
+              <tbody id="channels-table-body">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                    No channels scanned or mining has not started yet.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- TAB 2: INVENTORY -->
+      <section class="tab-pane" id="tab-inventory">
+        <div class="inventory-controls">
+          <div class="search-input-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="search-inventory" placeholder="Search game or campaign..." data-i18n-placeholder="inv_search_placeholder">
+          </div>
+
+          <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all" data-i18n="inv_filter_all">All</button>
+            <button class="filter-btn" data-filter="active" data-i18n="inv_filter_active">Active</button>
+            <button class="filter-btn" data-filter="not_linked" data-i18n="inv_filter_not_linked">Not Linked ❌</button>
+            <button class="filter-btn" data-filter="upcoming" data-i18n="inv_filter_upcoming">Upcoming</button>
+            <button class="filter-btn" data-filter="expired" data-i18n="inv_filter_expired">Expired</button>
+          </div>
+
+          <button class="btn btn-secondary btn-sm" id="btn-refresh-inventory" data-i18n="inv_btn_refresh" style="white-space: nowrap; margin-left: auto;">
+            🔄 Refresh
+          </button>
+        </div>
+
+        <div class="campaigns-grid" id="campaigns-grid">
+          <!-- Filled dynamically via app.js -->
+        </div>
+      </section>
+
+      <!-- TAB 3: CHANNELS -->
+      <section class="tab-pane" id="tab-channels">
+        <div class="glass-card">
+          <div class="card-header">
+            <div class="card-title">
+              <span>📡</span>
+              <span data-i18n="channels_title">Live Stream Channels</span>
+            </div>
+            <button class="btn btn-secondary" id="btn-refresh-channels" data-i18n="btn_reload">
+              🔄 Reload
+            </button>
+          </div>
+
+          <div class="channels-table-container">
+            <table class="channels-table">
+              <thead>
+                <tr>
+                  <th data-i18n="table_streamer">Streamer</th>
+                  <th data-i18n="table_title">Stream Title</th>
+                  <th data-i18n="table_game">Game</th>
+                  <th data-i18n="table_viewers">Viewers</th>
+                  <th data-i18n="table_status">Status</th>
+                  <th data-i18n="table_action">Action</th>
+                </tr>
+              </thead>
+              <tbody id="full-channels-table-body">
+                <tr>
+                  <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                    Loading streamers...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: TWITCH ACCOUNT & LOGIN -->
+      <section class="tab-pane" id="tab-login">
+        <div class="login-page-container">
+
+          <!-- State 1: Already Connected Card -->
+          <div class="glass-card login-card" id="login-connected-card" style="display:none;">
+            <div class="card-header">
+              <div class="card-title">
+                <span>👤</span>
+                <span data-i18n="login_tab_title">Connected Twitch Account</span>
+              </div>
+              <span class="badge badge-success" data-i18n="auth_connected">● CONNECTED</span>
+            </div>
+
+            <div class="connected-user-box">
+              <div class="connected-avatar">🟣</div>
+              <div class="connected-meta">
+                <h3 id="connected-user-title">Twitch User</h3>
+                <p id="connected-user-subtitle" data-i18n="login_tab_desc">Session active. Mining runs 24/7 in background.</p>
+                <div class="connected-badges">
+                  <span class="tag-chip">OAuth 2.0 Verified</span>
+                  <span class="tag-chip">Cookies Saved</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="connected-actions">
+              <button class="btn btn-secondary" id="btn-reconnect-twitch" data-i18n="login_btn_reconnect">
+                🔄 Refresh Session / Re-validate
+              </button>
+              <button class="btn btn-danger" id="btn-logout-main" data-i18n="login_btn_logout">
+                🚪 Logout (Switch Account)
+              </button>
+            </div>
+          </div>
+
+          <!-- State 2: Login Setup Card -->
+          <div class="glass-card login-card" id="login-setup-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>🔑</span>
+                <span data-i18n="login_setup_title">Connect Twitch Account</span>
+              </div>
+              <span class="by-bcz-badge">Official Twitch OAuth</span>
+            </div>
+
+            <div class="login-tabs-header">
+              <button class="login-subtab-btn active" data-subtab="device" data-i18n="login_subtab_device">
+                🚀 Quick Login (Twitch Code)
+              </button>
+              <button class="login-subtab-btn" data-subtab="token" data-i18n="login_subtab_token">
+                🏷️ Manual Auth Token
+              </button>
+            </div>
+
+            <!-- Subtab 1: Device Code Flow (Recommended) -->
+            <div class="login-subtab-content active" id="subtab-device">
+              
+              <!-- Idle State -->
+              <div id="device-state-idle" class="device-flow-state">
+                <div class="flow-icon">🟣</div>
+                <h3 data-i18n="device_flow_title">Sign in easily with your Twitch account</h3>
+                <p class="flow-desc" data-i18n="device_flow_desc">
+                  You do not need to enter your password. Generate a secure official Twitch activation code with one click and approve it in your browser.
+                </p>
+                <button class="btn btn-twitch btn-lg" id="btn-get-device-code">
+                  <span>🚀</span> <span data-i18n="btn_get_code">Get Twitch Login Code</span>
+                </button>
+              </div>
+
+              <!-- Loading State -->
+              <div id="device-state-loading" class="device-flow-state" style="display:none;">
+                <div class="login-spinner"></div>
+                <h3>Connecting to Twitch...</h3>
+                <p class="flow-desc">Generating activation code, please wait...</p>
+              </div>
+
+              <!-- Code Ready State -->
+              <div id="device-state-code" class="device-flow-state" style="display:none;">
+                <div class="flow-step-badge" data-i18n="device_step_1">STEP 1: YOUR CODE</div>
+                <div class="big-code-box">
+                  <span id="display-user-code">---- ----</span>
+                  <button class="btn btn-secondary btn-sm" id="btn-copy-device-code" title="Copy Code" data-i18n="device_btn_copy">
+                    📋 Copy
+                  </button>
+                </div>
+
+                <div class="flow-step-badge" data-i18n="device_step_2">STEP 2: APPROVAL</div>
+                <p class="flow-desc" data-i18n="device_code_desc">
+                  Click the button below to open Twitch activation page. Once authorized, the miner will automatically detect and complete login:
+                </p>
+
+                <div class="code-action-buttons">
+                  <button class="btn btn-twitch btn-lg" id="btn-open-twitch-activate" data-i18n="btn_open_twitch">
+                    🌐 Open Twitch Page &amp; Approve
+                  </button>
+                </div>
+
+                <div class="login-listening-indicator">
+                  <span class="pulse-dot"></span>
+                  <span data-i18n="device_waiting_approval">Waiting for Twitch authorization... (Auto Detected)</span>
+                </div>
+              </div>
+
+              <!-- Error State -->
+              <div id="device-state-error" class="device-flow-state" style="display:none;">
+                <div class="flow-icon error">❌</div>
+                <h3>Connection Error</h3>
+                <p class="flow-desc" id="device-error-msg">An error occurred during login.</p>
+                <button class="btn btn-secondary" id="btn-retry-device-code" data-i18n="device_btn_retry">
+                  🔄 Try Again
+                </button>
+              </div>
+
+            </div>
+
+            <!-- Subtab 2: Manual Token Flow -->
+            <div class="login-subtab-content" id="subtab-token">
+              <div class="manual-token-box">
+                <p class="flow-desc" data-i18n="manual_token_desc">
+                  If you already have your Twitch browser session auth-token cookie, paste it below to connect instantly:
+                </p>
+
+                <div class="token-input-group">
+                  <label for="manual-token-input" data-i18n="manual_token_label">Twitch auth-token Value:</label>
+                  <input type="password" class="form-input" id="manual-token-input" placeholder="e.g. oauth:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                </div>
+
+                <button class="btn btn-twitch" id="btn-save-manual-token" data-i18n="btn_save_token">
+                  💾 Save Token &amp; Connect
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Security Info Card -->
+          <div class="glass-card login-security-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>🔒</span>
+                <span data-i18n="security_title">Security &amp; Privacy Notice</span>
+              </div>
+            </div>
+            <ul class="security-checklist">
+              <li>✅ <strong data-i18n="security_1">Password is Never Asked: All logins are handled through Twitch official OAuth protocol.</strong></li>
+              <li>✅ <strong data-i18n="security_2">Local Storage Only: Your session cookies are stored strictly on your local machine.</strong></li>
+              <li>✅ <strong data-i18n="security_3">24/7 Automated Mining: Once connected, the program mines drops and bonus channel points automatically.</strong></li>
+            </ul>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 5: CONSOLE & LOGS -->
+      <section class="tab-pane" id="tab-console">
+        <div class="console-wrapper">
+          <div class="console-header">
+            <div class="console-filters">
+              <button class="console-filter-btn active" data-log-filter="all" data-i18n="console_filter_all">All</button>
+              <button class="console-filter-btn" data-log-filter="mining" data-i18n="console_filter_mining">Mining</button>
+              <button class="console-filter-btn" data-log-filter="claim" data-i18n="console_filter_claim">Claims</button>
+              <button class="console-filter-btn" data-log-filter="points" data-i18n="console_filter_points">Channel Points</button>
+              <button class="console-filter-btn" data-log-filter="error" data-i18n="console_filter_error">Errors</button>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;" id="btn-copy-logs" data-i18n="btn_copy_logs">
+                📋 Copy
+              </button>
+              <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;" id="btn-clear-logs" data-i18n="btn_clear_logs">
+                🗑️ Clear
+              </button>
+            </div>
+          </div>
+
+          <div class="console-logs" id="console-logs-output">
+            <!-- Filled via WebSocket/RPC -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: SETTINGS -->
+      <section class="tab-pane" id="tab-settings">
+        <div class="settings-grid">
+
+          <!-- Language Selection -->
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>🌐</span>
+                <span data-i18n="setting_lang_title">Application Language / Dil Seçimi</span>
+              </div>
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;" data-i18n="setting_lang_desc">
+              Choose your preferred language for the application interface.
+            </p>
+
+            <div style="display: flex; gap: 8px; max-width: 320px;">
+              <select class="form-input" id="setting-language-select">
+                <option value="en">🇬🇧 English (Default)</option>
+                <option value="tr">🇹🇷 Türkçe</option>
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="fr">🇫🇷 Français</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="ru">🇷🇺 Русский</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Priority Games -->
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>🎯</span>
+                <span data-i18n="setting_priority_title">Priority Games Ranking</span>
+              </div>
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;" data-i18n="setting_priority_desc">
+              Games at the top of the list are always watched with highest priority.
+            </p>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              <select class="form-input" id="priority-game-select">
+                <option value="" data-i18n="setting_priority_select">Select game from active campaigns...</option>
+              </select>
+              <button class="btn btn-twitch" id="btn-add-priority" data-i18n="btn_add_priority">
+                ➕ Add
+              </button>
+            </div>
+
+            <div class="priority-list" id="priority-list-container">
+              <!-- Filled via app.js -->
+            </div>
+          </div>
+
+          <!-- Reload / Re-fetch Campaigns Card (Original App Functionality) -->
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>🔄</span>
+                <span data-i18n="setting_reload_title">Reload Campaigns &amp; Inventory</span>
+              </div>
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;" data-i18n="setting_reload_desc">
+              Most changes require a reload to take effect. Re-checks all linked game accounts and active streams from Twitch.
+            </p>
+            <button class="btn btn-twitch btn-sm" id="btn-settings-reload" data-i18n="btn_reload_now" style="width: fit-content;">
+              🔄 Reload Now
+            </button>
+          </div>
+
+          <!-- Automation Toggles -->
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>🤖</span>
+                <span data-i18n="setting_automation_title">Automation &amp; Smart Features</span>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-title" data-i18n="setting_auto_claim">Auto-Claim Drops</span>
+                <span class="setting-desc" data-i18n="setting_auto_claim_desc">Instantly claims rewards into inventory when watch time requirement is met.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="setting-auto-claim" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-title" data-i18n="setting_points">Auto-Claim Community Channel Points (+50)</span>
+                <span class="setting-desc" data-i18n="setting_points_desc">Automatically clicks chest bonus via websocket whenever it appears.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="setting-channel-points" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-title" data-i18n="setting_watchdog">Auto Recovery (Watchdog)</span>
+                <span class="setting-desc" data-i18n="setting_watchdog_desc">Automatically reconnects within 10s if connection or Twitch server drops.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="setting-watchdog" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-title" data-i18n="setting_sound">Audio Notification on Claim</span>
+                <span class="setting-desc" data-i18n="setting_sound_desc">Plays a notification chime when a drop is earned.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="setting-sound" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-label">
+                <span class="setting-title" data-i18n="setting_tray">Minimize to System Tray</span>
+                <span class="setting-desc" data-i18n="setting_tray_desc">Keeps mining quietly in background when window is closed.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="setting-tray">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Webhooks -->
+          <div class="glass-card">
+            <div class="card-header">
+              <div class="card-title">
+                <span>🔔</span>
+                <span data-i18n="setting_webhooks_title">Discord &amp; Telegram Webhooks</span>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <div>
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 6px;">
+                  Discord Webhook URL:
+                </label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" class="form-input" id="setting-discord-webhook" placeholder="https://discord.com/api/webhooks/...">
+                  <button class="btn btn-secondary" id="btn-test-discord" data-i18n="btn_test">Test</button>
+                </div>
+              </div>
+
+              <div>
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 6px;">
+                  Telegram Bot Token &amp; Chat ID:
+                </label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" class="form-input" id="setting-telegram-token" placeholder="Bot Token (e.g. 123456:ABC-DEF...)">
+                  <input type="text" class="form-input" id="setting-telegram-chatid" placeholder="Chat ID (e.g. 12345678)">
+                  <button class="btn btn-secondary" id="btn-test-telegram" data-i18n="btn_test">Test</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- TAB 7: ABOUT & HELP -->
+      <section class="tab-pane" id="tab-about">
+        <div class="glass-card" style="max-width: 700px;">
+          <div class="card-header">
+            <div class="card-title">
+              <span>💎</span>
+              <span>Twitch Drops Miner Pro (By BCZ)</span>
+            </div>
+            <span class="by-bcz-badge">v1.0.0-beta Pro</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 14px; font-size: 13px; line-height: 1.6; color: var(--text-secondary);">
+            <p data-i18n="about_desc">
+              Twitch Drops Miner Pro is a high-performance automated AFK reward engine designed to collect drops and channel points 24/7 seamlessly.
+            </p>
+
+            <div style="background: var(--bg-tertiary); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+              <div style="font-weight: 700; color: var(--text-highlight); margin-bottom: 6px;" data-i18n="about_dev">
+                Developer &amp; Creator:
+              </div>
+              <div style="color: var(--twitch-purple-light); font-weight: 600; font-size: 14px;">
+                By BCZ
+              </div>
+              <div style="margin-top: 8px;">
+                <button class="btn btn-twitch" id="btn-open-github" style="padding: 5px 12px; font-size: 12px;" data-i18n="btn_github">
+                  🌐 Open GitHub Repository
+                </button>
+              </div>
+            </div>
+
+            <div style="background: var(--bg-tertiary); padding: 14px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+              <div style="font-weight: 700; color: var(--text-highlight); margin-bottom: 6px;" data-i18n="about_auth_status">
+                Twitch Session Status:
+              </div>
+              <div id="about-auth-status-text" style="color: var(--accent-green); font-weight: 600;">
+                Checking session...
+              </div>
+              <div style="margin-top: 10px;">
+                <button class="btn btn-twitch" id="btn-about-manage-auth" style="padding: 5px 12px; font-size: 12px;" data-i18n="btn_manage_account">
+                  🔑 Manage Account / Login
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Audio Element for Claim Sound -->
+  <audio id="audio-claim" src="sounds/claim.wav" preload="auto"></audio>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="i18n.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
