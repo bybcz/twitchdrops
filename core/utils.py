@@ -259,9 +259,23 @@ def json_load(path: Path, defaults: _JSON_T, *, merge: bool = True) -> _JSON_T:
 
 def json_save(path: Path, contents: Mapping[Any, Any], *, sort: bool = False) -> None:
     new_path: Path = path.with_name(f"{path.name}.new")
-    with new_path.open('w', encoding="utf8") as file:
-        json.dump(contents, file, default=_serialize, sort_keys=sort, indent=4)
-    new_path.replace(path)
+    try:
+        with new_path.open('w', encoding="utf8") as file:
+            json.dump(contents, file, default=_serialize, sort_keys=sort, indent=4)
+        for _ in range(5):
+            try:
+                new_path.replace(path)
+                return
+            except (PermissionError, OSError):
+                import time
+                time.sleep(0.05)
+        # Direct fallback
+        with path.open('w', encoding="utf8") as file:
+            json.dump(contents, file, default=_serialize, sort_keys=sort, indent=4)
+        if new_path.exists():
+            new_path.unlink(missing_ok=True)
+    except Exception as exc:
+        logger.warning(f"json_save failed for {path}: {exc}")
 
 
 def webopen(url: URL | str):

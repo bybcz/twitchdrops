@@ -652,6 +652,116 @@ class AppBridge:
         self._manager._twitch.settings.save()
 
 
+DEFAULT_ACTIVE_GAMES: list[str] = [
+    "ACE COMBAT 8: WINGS OF THEVE",
+    "ARKNIGHTS: ENDFIELD",
+    "Ace Combat Zero: The Belkan War",
+    "Active Matter",
+    "Airport Baggage Simulator",
+    "Albion Online",
+    "Aniimo",
+    "Apex Legends",
+    "Arena Breakout: Infinite",
+    "Big Walk",
+    "Black Desert",
+    "Blue Protocol: Star Resonance",
+    "Brawlhalla",
+    "CONTROL Resonant",
+    "Coin Pusher Live",
+    "Coryphaeus Championships",
+    "Cyberpunk 2077",
+    "Dead by Daylight",
+    "Delta Force",
+    "Destiny 2",
+    "Diablo IV",
+    "DRAGON BALL GEKISHIN SQUADRA",
+    "Dungeons & Dragons",
+    "EA Sports FC 25",
+    "EA Sports FC 27",
+    "Escape from Tarkov",
+    "Escape from Tarkov: Arena",
+    "Eternal Return",
+    "EVE Online",
+    "For Honor",
+    "Fortnite",
+    "Genshin Impact",
+    "Grand Theft Auto V",
+    "Hearthstone",
+    "Heroes of the Storm",
+    "HITMAN World of Assassination",
+    "Honkai: Star Rail",
+    "Hunt: Showdown 1896",
+    "Infinity Nikki",
+    "Kakele Online - MMORPG",
+    "Kirka.io",
+    "League of Legends",
+    "Legend of YMIR",
+    "Lost Ark",
+    "MARVEL Contest of Champions",
+    "MARVEL SNAP",
+    "MARVEL Strike Force",
+    "Marvel Rivals",
+    "Metaphor: ReFantazio",
+    "Mir Korabley",
+    "Mobile Dungeon",
+    "Modern Warships",
+    "NARAKA: BLADEPOINT",
+    "New World: Aeternum",
+    "Night Crows",
+    "Out of the Park Baseball 27",
+    "Overwatch 2",
+    "Paladins",
+    "Path of Exile",
+    "Path of Exile 2",
+    "PAYDAY 3",
+    "PERSONA3 RELOAD",
+    "Persona 4 Golden",
+    "Persona 5 Royal",
+    "Plants on Fire",
+    "Predecessor",
+    "PUBG: BATTLEGROUNDS",
+    "Rainbow Six Siege",
+    "RavenQuest",
+    "Ravendawn",
+    "Relic Arena",
+    "REMATCH",
+    "Rise Online",
+    "Rocket League",
+    "RuneScape: Dragonwilds",
+    "Rust",
+    "Sea of Thieves",
+    "Shakes and Fidget",
+    "Shin Megami Tensei V: Vengeance",
+    "Sid Meier's Civilization VII",
+    "Skull and Bones",
+    "Smite 2",
+    "Sonic Rumble Party",
+    "Special Events",
+    "Splinterlands",
+    "Storm Striker",
+    "The Blood of Dawnwalker",
+    "The Elder Scrolls Online",
+    "The First Descendant",
+    "The Quinfall",
+    "The Witcher 3: Wild Hunt",
+    "Throne and Liberty",
+    "Tom Clancy's Rainbow Six Siege",
+    "Tom Clancy's The Division 2",
+    "UFL",
+    "VALORANT",
+    "War Robots: Frontiers",
+    "WARDOGS",
+    "Warframe",
+    "Warhammer 40,000: Darktide",
+    "Where Winds Meet",
+    "Wolvesville",
+    "World of Tanks",
+    "World of Tanks: HEAT",
+    "World of Warships",
+    "Zenless Zone Zero",
+]
+
+
 class WebGUIManager:
     """Complete drop-in GUI replacement for TwitchDropsMiner powered by PyWebView."""
 
@@ -664,7 +774,7 @@ class WebGUIManager:
 
         self._stats_claimed = 0
         self._stats_points = 0
-        self._available_games: list[str] = []
+        self._available_games: list[str] = sorted(list(set(DEFAULT_ACTIVE_GAMES)))
 
         # Subcomponents
         self.status = StatusProxy(self)
@@ -727,7 +837,7 @@ class WebGUIManager:
         })
 
     def set_games(self, games_set: set[Any]):
-        names = set()
+        names = set(DEFAULT_ACTIVE_GAMES)
         for g in games_set:
             if hasattr(g, "name"):
                 names.add(g.name)

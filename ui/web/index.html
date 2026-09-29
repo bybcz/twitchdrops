@@ -540,6 +540,15 @@
               Games at the top of the list are always watched with highest priority.
             </p>
 
+            <div id="priority-auth-alert" class="dashboard-alert-banner" style="margin-bottom: 12px; display: none;">
+              <span style="font-size: 18px;">🔑</span>
+              <div style="flex: 1;">
+                <div style="font-weight: 700; font-size: 13px;" data-i18n="prio_alert_title">Twitch Account Not Connected</div>
+                <div style="font-size: 12px; color: var(--text-muted);" data-i18n="prio_alert_desc">You can select your priority games now. Please connect your account from the Login tab to enable live drops mining and inventory sync.</div>
+              </div>
+              <button class="btn btn-twitch" onclick="window.app.goToTab('login')" data-i18n="dash_alert_btn">🔑 Connect Now</button>
+            </div>
+
             <div style="display: flex; gap: 8px; margin-bottom: 12px;">
               <select class="form-input" id="priority-game-select">
                 <option value="" data-i18n="setting_priority_select">Select game from active campaigns...</option>

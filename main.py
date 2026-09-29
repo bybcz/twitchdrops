@@ -90,7 +90,7 @@ def main():
 
     # Create PyWebView window
     window = webview.create_window(
-        title="Twitch Drops Miner Pro (By BCZ) v1.0.0",
+        title="Twitch Drops Miner Pro (By BCZ) v1.0.1-beta",
         url=str(html_path.resolve()),
         js_api=client.gui.bridge,
         width=1240,

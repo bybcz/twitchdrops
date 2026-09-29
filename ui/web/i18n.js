@@ -194,7 +194,9 @@
                   "status_session_closed": "Session Closed — Login Required",
                   "drop_almost_done": "Almost Done!",
                   "drop_min_suffix": "min",
-                  "inv_completed": "Completed"
+                  "inv_completed": "Completed",
+                  "prio_alert_title": "Twitch Account Not Connected",
+                  "prio_alert_desc": "You can select your priority games now. Please connect your account from the Login tab to enable live drops mining and inventory sync."
             }
       },
       "tr": {
@@ -381,7 +383,9 @@
                   "status_session_closed": "Oturum Kapatıldı — Giriş Gerekli",
                   "drop_almost_done": "Neredeyse Bitti!",
                   "drop_min_suffix": "dk",
-                  "inv_completed": "Tamamlandı"
+                  "inv_completed": "Tamamlandı",
+                  "prio_alert_title": "Twitch Hesabı Bağlı Değil",
+                  "prio_alert_desc": "Öncelikli oyunlarınızı şimdi seçebilirsiniz. Canlı madenciliği başlatmak ve envanterinizi eşitlemek için lütfen Giriş sekmesinden Twitch hesabınızı bağlayın."
             }
       },
       "de": {
@@ -568,7 +572,9 @@
                   "status_session_closed": "Sitzung geschlossen – Anmeldung erforderlich",
                   "drop_almost_done": "Fast fertig!",
                   "drop_min_suffix": "Min",
-                  "inv_completed": "Abgeschlossen"
+                  "inv_completed": "Abgeschlossen",
+                  "prio_alert_title": "Twitch-Konto nicht verbunden",
+                  "prio_alert_desc": "Sie können Ihre bevorzugten Spiele jetzt auswählen. Bitte verbinden Sie Ihr Konto im Login-Tab, um das Live-Drops-Mining zu aktivieren."
             }
       },
       "fr": {
@@ -755,7 +761,9 @@
                   "status_session_closed": "Session fermée — Connexion requise",
                   "drop_almost_done": "Presque terminé !",
                   "drop_min_suffix": "min",
-                  "inv_completed": "Terminé"
+                  "inv_completed": "Terminé",
+                  "prio_alert_title": "Compte Twitch non connecté",
+                  "prio_alert_desc": "Vous pouvez choisir vos jeux prioritaires dès maintenant. Veuillez connecter votre compte depuis l'onglet Connexion pour activer le minage."
             }
       },
       "es": {
@@ -942,7 +950,9 @@
                   "status_session_closed": "Sesión cerrada — Se requiere inicio de sesión",
                   "drop_almost_done": "¡Casi listo!",
                   "drop_min_suffix": "min",
-                  "inv_completed": "Completado"
+                  "inv_completed": "Completado",
+                  "prio_alert_title": "Cuenta de Twitch no conectada",
+                  "prio_alert_desc": "Puede elegir sus juegos prioritarios ahora. Conecte su cuenta desde la pestaña Iniciar sesión para activar la minería de drops."
             }
       },
       "ru": {
@@ -1129,7 +1139,9 @@
                   "status_session_closed": "Сессия закрыта — требуется вход",
                   "drop_almost_done": "Почти готово!",
                   "drop_min_suffix": "мин",
-                  "inv_completed": "Завершено"
+                  "inv_completed": "Завершено",
+                  "prio_alert_title": "Аккаунт Twitch не подключен",
+                  "prio_alert_desc": "Вы можете выбрать приоритетные игры сейчас. Подключите аккаунт на вкладке Вход, чтобы активировать майнинг дропов."
             }
       }
 },
