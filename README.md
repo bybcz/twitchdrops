@@ -1,9 +1,9 @@
-# ⛏️ Twitch Drops Miner Pro (By BCZ) — `v1.0.0-beta`
+# ⛏️ Twitch Drops Miner Pro (By BCZ) — `v1.0.1-beta`
 
 <div align="center">
 
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
-![Release](https://img.shields.io/badge/Release-v1.0.0--beta-9146FF?style=for-the-badge&logo=twitch&logoColor=white)
+![Release](https://img.shields.io/badge/Release-v1.0.1--beta-9146FF?style=for-the-badge&logo=twitch&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Active%20Beta-00C853?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-F57C00?style=for-the-badge)
@@ -11,16 +11,53 @@
 **The next-generation, high-performance automated AFK reward & Twitch drops engine.**  
 *Completely redesigned with an ultra-modern reactive Web GUI, multi-language engine, authoritative account linking, and intelligent drop routing.*
 
-[📦 Releases](https://github.com/bybcz/twitchdrops/releases) • [✨ What Was Done](#-what-was-done--key-enhancements) • [📖 How to Use](#-how-to-use-step-by-step) • [🇹🇷 Türkçe Açıklama](#-türkçe-özet--kullanım-kılavuzu)
+[📦 Releases](https://github.com/bybcz/twitchdrops/releases) • [📸 Screenshots](#-screenshots--programdan-görüntüler) • [✨ What Was Done](#-what-was-done--key-enhancements) • [📖 How to Use](#-how-to-use-step-by-step) • [🇹🇷 Türkçe Açıklama](#-türkçe-özet--kullanım-kılavuzu)
 
 </div>
 
 ---
 
 > [!NOTE]
-> **Beta Release Status (`v1.0.0-beta`)**: This program is under active development by **By BCZ**. New features, additional language localizations, and game linking mappings are continuously updated. Feedback and contributions are welcome!
+> **Beta Release Status (`v1.0.1-beta`)**: This program is under active development by **By BCZ**. New features, additional language localizations, and game linking mappings are continuously updated. Feedback and contributions are welcome!
 >
-> 📥 **Downloads**: Pre-compiled packages (`.exe`, `.zip`, `.rar`) are available directly in the **[Releases](https://github.com/bybcz/twitchdrops/releases)** section on the right sidebar. New versions and updates will be published there consecutively.
+> 📥 **Downloads**: Pre-compiled packages (`.exe`, `.zip`, `.rar`) are available directly in the **[Releases](https://github.com/bybcz/twitchdrops/releases)** section on the right sidebar. New versions and updates are published there consecutively.
+
+---
+
+## 📸 Screenshots / Programdan Görüntüler
+
+<div align="center">
+
+### 🎮 Modern Cyber Dashboard (Canlı Panel)
+![Twitch Drops Miner Pro Dashboard](docs/images/dashboard.png)
+
+### ⚙️ Settings & Localization Panel (Ayarlar & Dil Seçimi)
+![Twitch Drops Miner Pro Settings](docs/images/settings.png)
+
+</div>
+
+---
+
+## 📋 Changelog / Güncelleme Notları
+
+### 🚀 `v1.0.1-beta` (Latest)
+- **🌍 100% Complete Localization & Zero-Leak Dynamic Translation:**
+  - Resolved all hardcoded Turkish strings that previously leaked when English or other languages were selected.
+  - Dynamically routes all runtime UI components through the multi-language dictionary:
+    - Points counters (`Points` / `Puan` / `Punkte` / `Points` / `Puntos` / `Очки`),
+    - Drop counters (`Drop` / `Дроп`),
+    - Priority list empty states and button tooltips (Move Up, Move Down, Remove),
+    - Streamers / Channels table live status (`LIVE` / `CANLI`), watch buttons, and empty state notices,
+    - Active drop progress badges and completion markers (`Completed ✔`),
+    - Status bar states (Starting, Idle, Mining Active, Mining Paused, Session Closed),
+    - Toast notifications and authorization alerts.
+  - Added instant reactive re-rendering (`onLanguageChanged`) whenever the language dropdown is changed, updating the active view immediately without restarting.
+- **🏷️ GitHub Release Visibility & Distribution:**
+  - Optimized GitHub Release publishing with `make_latest: true` so the latest version badge displays directly on the repository sidebar.
+- **🖼️ Documentation Overhaul:**
+  - Embedded high-resolution screenshots of the Dashboard and Settings panels directly into the repository documentation.
+- **🔒 Security & Clean State:**
+  - Cleaned all residual session tokens and cookies from the production distribution bundle.
 
 ---
 
@@ -115,7 +152,7 @@ twitchdrops/
 │   ├── websocket.py             # Multi-WebSocket Connection Pool
 │   ├── settings.py              # User Settings Manager
 │   ├── translate.py             # Backend Translation Engine
-│   └── version.py               # Version definition (v1.0.0-beta)
+│   └── version.py               # Version definition (v1.0.1-beta)
 ├── ui/
 │   ├── web_gui.py               # PyWebView Controller & Python-JS Bridge
 │   └── web/                     # Reactive Frontend
@@ -124,6 +161,8 @@ twitchdrops/
 │       ├── app.js               # Reactive State Controller
 │       ├── i18n.js              # 6-Language Localization Engine
 │       └── sounds/              # Audio Chimes & Feedback
+├── docs/
+│   └── images/                  # Screenshots (Dashboard, Settings)
 ├── icons/                       # Application Icons
 ├── lang/                        # Extended Translation Dictionaries
 ├── main.py                      # Application Entry Point
@@ -160,7 +199,7 @@ The resulting executable will be created at `dist/TwitchDropsMinerPro.exe`.
 
 ### 🚀 Neler Yaptık?
 1. **Modern Arayüz (Web GUI):** Eski Tkinter arayüzü tamamen kaldırılarak yerine modern, Twitch mor temalı, karanlık mod (dark glassmorphism) destekli PyWebView tabanlı web arayüzü geliştirildi.
-2. **Varsayılan İngilizce & 6 Dil Desteği:** Program ilk açılışta varsayılan olarak **İngilizce** açılır. Ayarlar sekmesinden tek tıkla **Türkçe**, Almanca, Fransızca, İspanyolca ve Rusça dillerine anında geçiş yapılabilir.
+2. **Varsayılan İngilizce & 6 Dil Desteği:** Program ilk açılışta varsayılan olarak **İngilizce** açılır. Ayarlar sekmesinden tek tıkla **Türkçe**, Almanca, Fransızca, İspanyolca ve Rusça dillerine anında geçiş yapılabilir. Dinamik arayüz elementlerindeki tüm Türkçe kaçaklar giderildi.
 3. **Resmi Hesap Bağlama Sayfasına Doğrudan Yönlendirme:** Hesaba bağlı olmayan (`Not Linked ❌`) oyunların genel `twitch.tv/drops/campaigns` sayfasına düşmesi engellendi. Artık rozete tıkladığınızda doğrudan o oyunun yapımcısına ait resmi hesap bağlama sayfası (*Rise Online, Eternal Return, The First Descendant, Warframe, Diablo IV vb.*) açılır.
 4. **Doğru Hesap Durumu:** Kullanıcının daha önce bağladığı hesaplar (*Rust - Facepunch, Apex - EA vb.*) envanter geçmişi taranarak tespit edilir ve doğru bir şekilde `Linked ✔` olarak işaretlenir.
 5. **Rust Hayalet Süre Hatası Çözüldü:** Tüm dropları alınmış oyunlarda 60 dakikalık hayali geri sayımın sonsuza kadar dönmesi engellendi; tamamlanan oyunlar listede `Completed ✔` olarak işaretlenip sıradaki oyuna geçilir.
@@ -186,4 +225,4 @@ This software is an unofficial, independent open-source automation utility and i
 - **Developer & Creator**: **By BCZ** ([@bybcz](https://github.com/bybcz))
 - **Repository**: [https://github.com/bybcz/twitchdrops](https://github.com/bybcz/twitchdrops)
 - **Releases**: [https://github.com/bybcz/twitchdrops/releases](https://github.com/bybcz/twitchdrops/releases)
-- **Current Version**: `v1.0.0-beta`
+- **Current Version**: `v1.0.1-beta`

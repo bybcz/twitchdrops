@@ -5,6 +5,8 @@
 (function () {
   'use strict';
 
+  const t = (k, params) => (window.i18n ? window.i18n.t(k, params) : k);
+
   // Global App Controller exposed to Python WebView
   window.app = {
     state: {
@@ -23,12 +25,26 @@
       channels: [],
       priorityGames: [],
       logs: [],
-      deviceCodeUrl: 'https://www.twitch.tv/activate'
+      deviceCodeUrl: 'https://www.twitch.tv/activate',
+      lastWatchingData: null,
+      lastStatusData: null
     },
 
     // ------------------------------------------------------------------------
     // Initialization
     // ------------------------------------------------------------------------
+    onLanguageChanged: function () {
+      this.updateAuthUI(this.state.isLoggedIn, this.state.username, this.state.userId);
+      this.setClaimedDrops(this.state.claimedDrops);
+      this.setPointsEarned(this.state.pointsEarned);
+      if (this.state.priorityGames) this.renderPriorityList(this.state.priorityGames);
+      if (this.state.campaigns) this.renderCampaigns(this.state.campaigns);
+      if (this.state.channels) this.renderChannels(this.state.channels);
+      if (this.state.lastWatchingData) this.handleWatchingUpdate(this.state.lastWatchingData);
+      if (this.state.lastStatusData) this.handleStatusUpdate(this.state.lastStatusData);
+      this.updateDropUI();
+    },
+
     init: function () {
       console.log('Twitch Drops Miner Pro (By BCZ) UI Initializing...');
       if (window.i18n) window.i18n.init();
@@ -80,7 +96,7 @@
       if (!window.pywebview || !window.pywebview.api) return;
       window.pywebview.api.get_auth_status().then((res) => {
         if (res && res.logged_in) {
-          this.updateAuthUI(true, res.username || 'Twitch Hesabı', res.user_id);
+          this.updateAuthUI(true, res.username || '', res.user_id);
         } else {
           this.updateAuthUI(false);
           // If not logged in, prompt user clearly by showing the login tab or alert
@@ -105,11 +121,11 @@
         if (isLoggedIn) {
           headerAuthBtn.className = 'btn btn-auth-header connected';
           if (headerAuthIcon) headerAuthIcon.innerText = '👤';
-          if (headerAuthLabel) headerAuthLabel.innerText = username || 'Bağlı Hesap';
+          if (headerAuthLabel) headerAuthLabel.innerText = username || t('auth_linked_account');
         } else {
           headerAuthBtn.className = 'btn btn-auth-header not-connected';
           if (headerAuthIcon) headerAuthIcon.innerText = '🔑';
-          if (headerAuthLabel) headerAuthLabel.innerText = 'Giriş Yap';
+          if (headerAuthLabel) headerAuthLabel.innerText = t('header_login');
         }
       }
 
@@ -121,19 +137,19 @@
 
       if (isLoggedIn) {
         if (sidebarDot) sidebarDot.className = 'sidebar-online-dot online';
-        if (sidebarUser) sidebarUser.innerText = username || 'Twitch Hesabı';
-        if (sidebarRole) sidebarRole.innerText = '🟢 Oturum Açık';
+        if (sidebarUser) sidebarUser.innerText = username || t('auth_user_fallback');
+        if (sidebarRole) sidebarRole.innerText = '🟢 ' + t('auth_session_active');
         if (navBadgeAuth) {
           navBadgeAuth.className = 'badge badge-auth logged';
-          navBadgeAuth.innerText = 'Bağlı';
+          navBadgeAuth.innerText = t('auth_connected');
         }
       } else {
         if (sidebarDot) sidebarDot.className = 'sidebar-online-dot';
-        if (sidebarUser) sidebarUser.innerText = 'Giriş Yapılmadı';
-        if (sidebarRole) sidebarRole.innerText = '🔴 Bağlantı Yok';
+        if (sidebarUser) sidebarUser.innerText = t('auth_not_logged_in');
+        if (sidebarRole) sidebarRole.innerText = '🔴 ' + t('auth_no_connection');
         if (navBadgeAuth) {
           navBadgeAuth.className = 'badge badge-auth not-logged';
-          navBadgeAuth.innerText = 'Giriş Yap';
+          navBadgeAuth.innerText = t('header_login');
         }
       }
 
@@ -152,9 +168,9 @@
       if (isLoggedIn) {
         if (connectedCard) connectedCard.style.display = 'block';
         if (setupCard) setupCard.style.display = 'none';
-        if (connTitle) connTitle.innerText = username || 'Twitch Kullanıcısı';
+        if (connTitle) connTitle.innerText = username || t('auth_user_connected_title');
         if (connSubtitle) {
-          connSubtitle.innerText = userId ? `Kullanıcı ID: ${userId} • 7/24 Kesintisiz Madencilik Aktif` : 'Oturum aktif ve çalışıyor.';
+          connSubtitle.innerText = userId ? t('auth_subtitle_active_id', { id: userId }) : t('auth_subtitle_active');
         }
       } else {
         if (connectedCard) connectedCard.style.display = 'none';
@@ -166,10 +182,10 @@
       const aboutStatus = document.getElementById('about-auth-status-text');
       if (aboutStatus) {
         if (isLoggedIn) {
-          aboutStatus.innerText = `Oturum Açık (${username || 'Bağlı'})`;
+          aboutStatus.innerText = t('about_auth_logged_in', { username: username || t('auth_connected') });
           aboutStatus.style.color = 'var(--accent-green)';
         } else {
-          aboutStatus.innerText = 'Giriş Yapılmadı (Bağlantı Yok)';
+          aboutStatus.innerText = t('about_auth_logged_out');
           aboutStatus.style.color = 'var(--accent-red)';
         }
       }
@@ -258,7 +274,7 @@
       if (btnGetCode) {
         btnGetCode.addEventListener('click', () => {
           this.setDeviceFlowState('loading');
-          this.showToast('Twitch giriş kodu isteniyor...', 'info');
+          this.showToast(t('toast_requesting_code'), 'info');
           if (api()) {
             api().start_twitch_login();
           }
@@ -272,7 +288,7 @@
           const codeText = document.getElementById('display-user-code').innerText;
           if (codeText && codeText !== '---- ----') {
             navigator.clipboard.writeText(codeText.replace(/\s+/g, '')).then(() => {
-              this.showToast('Kod panoya kopyalandı! 📋', 'success');
+              this.showToast(t('toast_code_copied'), 'success');
             });
           }
         });
@@ -284,7 +300,7 @@
         btnOpenActivate.addEventListener('click', () => {
           const url = this.state.deviceCodeUrl || 'https://www.twitch.tv/activate';
           this.openExternal(url);
-          this.showToast('Twitch aktivasyon sayfası tarayıcıda açıldı.', 'info');
+          this.showToast(t('toast_activate_opened'), 'info');
         });
       }
 
@@ -303,17 +319,17 @@
         btnSaveManual.addEventListener('click', () => {
           const token = inputManual.value.trim();
           if (!token) {
-            this.showToast('Lütfen auth-token değerini girin.', 'error');
+            this.showToast(t('toast_token_req'), 'error');
             return;
           }
-          this.showToast('Token doğrulanıyor...', 'info');
+          this.showToast(t('toast_token_validating'), 'info');
           if (api()) {
             api().save_manual_token(token).then(res => {
               if (res && res.success) {
-                this.showToast('Token başarıyla kaydedildi!', 'success');
+                this.showToast(t('toast_token_saved'), 'success');
                 inputManual.value = '';
               } else {
-                this.showToast('Token hatası: ' + (res.error || 'Geçersiz token'), 'error');
+                this.showToast(t('toast_token_error') + ': ' + (res.error || t('toast_invalid_token')), 'error');
               }
             });
           }
@@ -324,7 +340,7 @@
       const btnReconnect = document.getElementById('btn-reconnect-twitch');
       if (btnReconnect) {
         btnReconnect.addEventListener('click', () => {
-          this.showToast('Oturum yenileniyor...', 'info');
+          this.showToast(t('toast_reconnecting'), 'info');
           if (api()) {
             api().start_twitch_login();
           }
@@ -335,7 +351,7 @@
       const btnLogoutMain = document.getElementById('btn-logout-main');
       if (btnLogoutMain) {
         btnLogoutMain.addEventListener('click', () => {
-          if (confirm('Twitch oturumunu kapatmak ve kayıtlı çerezleri silmek istiyor musunuz?')) {
+          if (confirm(t('confirm_logout'))) {
             if (api()) {
               api().logout();
             }
@@ -397,7 +413,7 @@
       if (btnOpenStream) {
         btnOpenStream.addEventListener('click', () => {
           const channelName = document.getElementById('watching-channel-name').innerText;
-          if (channelName && channelName !== 'Yayıncı Bekleniyor...' && channelName !== '-') {
+          if (channelName && channelName !== t('watching_waiting') && channelName !== 'Waiting for Streamer...' && channelName !== 'Yayıncı Bekleniyor...' && channelName !== '-') {
             this.openExternal(`https://www.twitch.tv/${channelName}`);
           } else {
             this.openExternal('https://www.twitch.tv/drops/inventory');
@@ -409,7 +425,7 @@
       const btnOpenGitHub = document.getElementById('btn-open-github');
       if (btnOpenGitHub) {
         btnOpenGitHub.addEventListener('click', () => {
-          this.openExternal('https://github.com/beratcemzengin/TwitchDropsMiner');
+          this.openExternal('https://github.com/bybcz/twitchdrops');
         });
       }
     },
@@ -462,16 +478,16 @@
         btnTestDiscord.addEventListener('click', () => {
           const url = inputDiscord.value.trim();
           if (!url) {
-            this.showToast('Lütfen geçerli bir Discord Webhook URL girin', 'error');
+            this.showToast(t('toast_discord_req'), 'error');
             return;
           }
-          this.showToast('Discord bildirimi test ediliyor...', 'info');
+          this.showToast(t('toast_discord_testing'), 'info');
           if (api()) {
             api().test_discord_webhook(url).then(res => {
               if (res && res.success) {
-                this.showToast('Discord bildirimi başarıyla gönderildi!', 'success');
+                this.showToast(t('toast_discord_success'), 'success');
               } else {
-                this.showToast('Discord bildirimi başarısız: ' + (res.error || 'Hata'), 'error');
+                this.showToast(t('toast_discord_failed') + ': ' + (res.error || t('status_error')), 'error');
               }
             });
           }
@@ -491,16 +507,16 @@
           const token = inputTelegramToken.value.trim();
           const chatId = inputTelegramChatId.value.trim();
           if (!token || !chatId) {
-            this.showToast('Lütfen Telegram Bot Token ve Chat ID girin', 'error');
+            this.showToast(t('toast_telegram_req'), 'error');
             return;
           }
-          this.showToast('Telegram bildirimi test ediliyor...', 'info');
+          this.showToast(t('toast_telegram_testing'), 'info');
           if (api()) {
             api().test_telegram_webhook(token, chatId).then(res => {
               if (res && res.success) {
-                this.showToast('Telegram bildirimi başarıyla gönderildi!', 'success');
+                this.showToast(t('toast_telegram_success'), 'success');
               } else {
-                this.showToast('Telegram bildirimi başarısız: ' + (res.error || 'Hata'), 'error');
+                this.showToast(t('toast_telegram_failed') + ': ' + (res.error || t('status_error')), 'error');
               }
             });
           }
@@ -556,7 +572,7 @@
       if (!container) return;
 
       if (!games || games.length === 0) {
-        container.innerHTML = `<div style="color: var(--text-muted); font-size: 12px; text-align: center; padding: 14px;">Öncelikli oyun eklenmedi. Tüm aktif kampanyalar varsayılan sırayla izlenir.</div>`;
+        container.innerHTML = `<div style="color: var(--text-muted); font-size: 12px; text-align: center; padding: 14px;">${t('priority_empty')}</div>`;
         return;
       }
 
@@ -566,14 +582,14 @@
         if (camp) {
           const isLinked = Boolean(camp.linked || camp.eligible);
           if (camp.finished) {
-            linkBadge += `<span class="campaign-link-badge" style="font-size: 10px; padding: 2px 6px; margin-left: 6px; background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">Completed ✔</span>`;
+            linkBadge += `<span class="campaign-link-badge" style="font-size: 10px; padding: 2px 6px; margin-left: 6px; background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">${t('inv_completed')} ✔</span>`;
           }
           if (isLinked) {
             const linkedText = window.i18n ? window.i18n.t('status_linked') : 'Linked ✔';
             linkBadge += `<span class="campaign-link-badge linked" style="font-size: 10px; padding: 2px 6px; margin-left: 6px; cursor: pointer;" onclick="event.stopPropagation(); window.app.linkCampaign('${camp.id}')" title="${linkedText} - Click to open game page">${linkedText} 🔗</span>`;
           } else {
             const notLinkedText = window.i18n ? window.i18n.t('status_not_linked') : 'Not Linked ❌';
-            const linkAccountText = window.i18n ? window.i18n.t('btn_link_account') : 'Hesabı Bağla';
+            const linkAccountText = t('btn_link_account');
             linkBadge += `<span class="campaign-link-badge not-linked" style="font-size: 10px; padding: 2px 6px; margin-left: 6px; cursor: pointer;" onclick="event.stopPropagation(); window.app.linkCampaign('${camp.id}')" title="${linkAccountText}">${notLinkedText}</span>`;
           }
         }
@@ -586,9 +602,9 @@
             ${linkBadge}
           </div>
           <div class="priority-item-controls">
-            ${idx > 0 ? `<button class="priority-btn" onclick="window.app.movePriority(${idx}, -1)" title="Yukarı Taşı">▲</button>` : ''}
-            ${idx < games.length - 1 ? `<button class="priority-btn" onclick="window.app.movePriority(${idx}, 1)" title="Aşağı Taşı">▼</button>` : ''}
-            <button class="priority-btn" onclick="window.app.removePriority(${idx})" title="Sil" style="color: #ff6b6b;">✖</button>
+            ${idx > 0 ? `<button class="priority-btn" onclick="window.app.movePriority(${idx}, -1)" title="${t('priority_btn_up')}">▲</button>` : ''}
+            ${idx < games.length - 1 ? `<button class="priority-btn" onclick="window.app.movePriority(${idx}, 1)" title="${t('priority_btn_down')}">▼</button>` : ''}
+            <button class="priority-btn" onclick="window.app.removePriority(${idx})" title="${t('priority_btn_remove')}" style="color: #ff6b6b;">✖</button>
           </div>
         </div>
       `;
@@ -666,7 +682,7 @@
       if (badge) badge.innerText = this.state.campaigns.length;
 
       if (filtered.length === 0) {
-        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">Eşleşen kampanya bulunamadı.</div>`;
+        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 40px;">${t('no_campaigns_found')}</div>`;
         return;
       }
 
@@ -674,7 +690,7 @@
         const isLinked = Boolean(c.linked || c.eligible);
         const linkedText = window.i18n ? window.i18n.t('status_linked') : 'Linked ✔';
         const notLinkedText = window.i18n ? window.i18n.t('status_not_linked') : 'Not Linked ❌';
-        const linkAccountText = window.i18n ? window.i18n.t('btn_link_account') : 'Hesabı Bağla';
+        const linkAccountText = t('btn_link_account');
         const endsPrefix = window.i18n ? window.i18n.t('ends_label') : 'Ends:';
         const startsPrefix = window.i18n ? window.i18n.t('starts_label') : 'Starts:';
         const allowedChannelsPrefix = window.i18n ? window.i18n.t('allowed_channels_label') : 'Allowed Channels:';
@@ -692,7 +708,7 @@
           <div class="campaign-top-bar">
             <span class="campaign-name-title" title="${this.escapeHtml(c.name)}">${this.escapeHtml(c.name)}</span>
             <div style="display: flex; gap: 6px; align-items: center;">
-              ${c.finished ? `<span class="campaign-status-badge" style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">Completed ✔ (${c.claimed_drops || c.drops.length}/${c.total_drops || c.drops.length})</span>` : ''}
+              ${c.finished ? `<span class="campaign-status-badge" style="background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">${t('inv_completed')} ✔ (${c.claimed_drops || c.drops.length}/${c.total_drops || c.drops.length})</span>` : ''}
               <span class="campaign-status-badge ${c.status.toLowerCase()}">${c.status}</span>
             </div>
           </div>
@@ -779,7 +795,7 @@
         btnCopy.addEventListener('click', () => {
           const text = this.state.logs.map(l => `[${l.time}] ${l.message}`).join('\n');
           navigator.clipboard.writeText(text).then(() => {
-            this.showToast('Loglar panoya kopyalandı', 'success');
+            this.showToast(t('toast_logs_copied'), 'success');
           });
         });
       }
@@ -826,11 +842,11 @@
       const summaryText = document.getElementById('channels-summary-text');
       const badge = document.getElementById('nav-badge-channels');
 
-      if (summaryText) summaryText.innerText = `${this.state.channels.length} kanal bulundu`;
+      if (summaryText) summaryText.innerText = `${this.state.channels.length} ${t('channels_found_suffix')}`;
       if (badge) badge.innerText = this.state.channels.length;
 
       if (!channels || channels.length === 0) {
-        const emptyMsg = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Henüz uygun kanal bulunamadı.</td></tr>`;
+        const emptyMsg = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">${t('no_channels_found')}</td></tr>`;
         if (miniBody) miniBody.innerHTML = emptyMsg;
         if (fullBody) fullBody.innerHTML = emptyMsg;
         return;
@@ -848,12 +864,12 @@
           <td>👥 ${ch.viewers ? ch.viewers.toLocaleString() : '0'}</td>
           <td>
             <span class="campaign-status-badge ${ch.live ? 'active' : 'expired'}">
-              ${ch.live ? 'CANLI' : 'ÇEVRİMDIŞI'}
+              ${ch.live ? t('status_live') : t('status_offline')}
             </span>
           </td>
           <td>
             <button class="btn btn-secondary" style="padding: 3px 8px; font-size: 11px;" onclick="window.app.selectChannel('${ch.name}')">
-              İzle
+              ${t('table_watch_btn')}
             </button>
           </td>
         </tr>
@@ -927,16 +943,16 @@
           this.state.deviceCodeUrl = data.url || 'https://www.twitch.tv/activate';
           const displayCode = document.getElementById('display-user-code');
           if (displayCode) displayCode.innerText = data.code || '---- ----';
-          this.showToast('Giriş kodu alındı! Lütfen Twitch sayfasında onaylayın.', 'info');
+          this.showToast(t('toast_code_received'), 'info');
           break;
 
         case 'login_confirmed':
-          this.showToast('Twitch doğrulaması bekleniyor...', 'info');
+          this.showToast(t('toast_waiting_auth'), 'info');
           break;
 
         case 'login_success':
-          this.updateAuthUI(true, data.username || 'Twitch Kullanıcısı', data.user_id);
-          this.showToast('Twitch girişi başarıyla tamamlandı! 🎉', 'success');
+          this.updateAuthUI(true, data.username || t('auth_user_fallback'), data.user_id);
+          this.showToast(t('toast_login_success'), 'success');
           // Automatically switch back to Dashboard after 1.5 seconds
           setTimeout(() => {
             this.goToTab('dashboard');
@@ -945,19 +961,20 @@
 
         case 'login_logged_out':
           this.updateAuthUI(false);
-          this.showToast('Twitch oturumu kapatıldı.', 'info');
+          this.showToast(t('toast_logout'), 'info');
           break;
 
         case 'login_error':
           this.setDeviceFlowState('error');
           const errEl = document.getElementById('device-error-msg');
-          if (errEl) errEl.innerText = data.error || 'Bağlantı hatası oluştu.';
-          this.showToast('Giriş hatası: ' + (data.error || 'Hata'), 'error');
+          if (errEl) errEl.innerText = data.error || t('toast_conn_error');
+          this.showToast(t('toast_login_error') + ': ' + (data.error || t('status_error')), 'error');
           break;
       }
     },
 
     handleStatusUpdate: function (data) {
+      this.state.lastStatusData = data;
       const dot = document.getElementById('status-dot');
       const text = document.getElementById('status-text');
       const btnToggle = document.getElementById('btn-toggle-mining');
@@ -966,12 +983,38 @@
         dot.className = `status-dot ${data.state || 'idle'}`;
       }
       if (text) {
-        text.innerText = data.text || (window.i18n ? window.i18n.t('status_idle') : 'Idle');
+        let statusStr = data.text;
+        if (data.key) {
+          statusStr = t(data.key);
+        } else if (data.text) {
+          const statusMap = {
+            'Başlatılıyor...': 'status_starting',
+            'Starting...': 'status_starting',
+            'Boşta': 'status_idle',
+            'Idle': 'status_idle',
+            'Madencilik Aktif': 'status_mining_active',
+            'Mining Active': 'status_mining_active',
+            'Madencilik Duraklatıldı': 'status_mining_paused',
+            'Mining Paused': 'status_mining_paused',
+            'Kanal taranıyor...': 'status_gathering',
+            'Gathering channels...': 'status_gathering',
+            'Kanala geçiliyor...': 'status_switching',
+            'Switching channel...': 'status_switching',
+            'Temizleniyor...': 'status_cleanup',
+            'Cleaning up...': 'status_cleanup',
+            'Oturum Kapatıldı — Giriş Gerekli': 'status_session_closed',
+            'Session Closed — Login Required': 'status_session_closed'
+          };
+          if (statusMap[data.text]) {
+            statusStr = t(statusMap[data.text]);
+          }
+        }
+        text.innerText = statusStr || t('status_idle');
       }
 
       if (btnToggle) {
-        const pauseText = window.i18n ? window.i18n.t('btn_pause') : 'Pause';
-        const startText = window.i18n ? window.i18n.t('btn_start') : 'Start';
+        const pauseText = t('btn_pause');
+        const startText = t('btn_start');
         if (data.is_running) {
           btnToggle.innerHTML = `<span>⏸</span> ${pauseText}`;
           btnToggle.className = 'btn btn-secondary';
@@ -983,6 +1026,7 @@
     },
 
     handleWatchingUpdate: function (data) {
+      this.state.lastWatchingData = data;
       const nameEl = document.getElementById('watching-channel-name');
       const gameEl = document.getElementById('watching-game-title');
       const viewersEl = document.getElementById('watching-viewers');
@@ -992,8 +1036,8 @@
       const fallback = document.getElementById('watching-avatar-fallback');
       const letterEl = document.getElementById('watching-avatar-letter');
 
-      const isWaiting = !data.name || data.name === 'Yayıncı Bekleniyor...' || data.name === 'Waiting for Streamer...';
-      const channelName = isWaiting ? (window.i18n ? window.i18n.t('watching_waiting') : 'Waiting for Streamer...') : data.name;
+      const isWaiting = !data.name || data.name === 'Yayıncı Bekleniyor...' || data.name === 'Waiting for Streamer...' || data.name === t('watching_waiting');
+      const channelName = isWaiting ? t('watching_waiting') : data.name;
 
       if (nameEl) nameEl.innerText = channelName;
       if (gameEl) {
@@ -1069,7 +1113,7 @@
       const etaPrefix = window.i18n ? window.i18n.t('drop_eta_label') : 'Remaining Time:';
       let etaVal = '';
       if (totalSec <= 0 && reqMins > 0) {
-        etaVal = 'Almost Done!';
+        etaVal = t('drop_almost_done');
       } else if (m > 0) {
         etaVal = `${m}m ${s.toString().padStart(2, '0')}s`;
       } else {
@@ -1080,7 +1124,7 @@
       // Progress minutes text (e.g. "45 / 60 min")
       const curMins = totalReqSec > 0 ? Math.min(reqMins, Math.floor(doneSec / 60)) : (this.state.currentMinutes || 0);
       const progPrefix = window.i18n ? window.i18n.t('drop_progress_label') : 'Progress:';
-      if (textEl) textEl.innerText = `${progPrefix} ${curMins} / ${reqMins} min`;
+      if (textEl) textEl.innerText = `${progPrefix} ${curMins} / ${reqMins} ${t('drop_min_suffix')}`;
 
       if (barEl) barEl.style.width = `${percent.toFixed(1)}%`;
       if (radialText) radialText.innerText = `${Math.round(percent)}%`;
@@ -1138,23 +1182,23 @@
       this.state.claimedDrops += 1;
       this.setClaimedDrops(this.state.claimedDrops);
       this.playClaimSound();
-      this.showToast(`🎉 DROP KAZANILDI: ${data.name || ''}`, 'success');
+      this.showToast(t('toast_drop_claimed', { name: data.name || '' }), 'success');
     },
 
     handlePointBonus: function (data) {
       this.state.pointsEarned += (data.amount || 50);
       this.setPointsEarned(this.state.pointsEarned);
-      this.showToast(`🪙 +${data.amount || 50} Kanal Puanı Bonusu Toplandı!`, 'info');
+      this.showToast(t('toast_points_bonus', { amount: data.amount || 50 }), 'info');
     },
 
     setClaimedDrops: function (count) {
       const el = document.getElementById('stat-claimed-drops');
-      if (el) el.innerText = `${count} Drop`;
+      if (el) el.innerText = `${count} ${t('stat_drops')}`;
     },
 
     setPointsEarned: function (points) {
       const el = document.getElementById('stat-points');
-      if (el) el.innerText = `${points.toLocaleString()} Puan`;
+      if (el) el.innerText = `${points.toLocaleString()} ${t('stat_points')}`;
     },
 
     playClaimSound: function () {
@@ -1198,9 +1242,9 @@
       const gameName = (camp && camp.game) ? camp.game : '';
       let msg = '';
       if (isLinked) {
-        msg = gameName ? `${gameName} sayfası tarayıcınızda açıldı.` : 'Oyun sayfası tarayıcınızda açıldı.';
+        msg = gameName ? t('toast_game_page_opened', { game: gameName }) : t('toast_page_opened');
       } else {
-        msg = window.i18n ? window.i18n.t('toast_link_opened') : 'Hesap bağlama sayfası tarayıcınızda açıldı. Hesabınızı bağladıktan sonra Envanteri Yenile 🔄 butonuna basabilirsiniz.';
+        msg = t('toast_link_opened');
       }
       this.showToast(msg, 'info');
     },
@@ -1208,12 +1252,12 @@
     openActiveDropLink: function () {
       const url = (this.state.campaignLinkUrl && this.state.campaignLinkUrl.trim()) ? this.state.campaignLinkUrl.trim() : 'https://www.twitch.tv/drops/campaigns';
       this.openExternal(url);
-      const msg = window.i18n ? window.i18n.t('toast_link_opened') : 'Hesap bağlama sayfası tarayıcınızda açıldı.';
+      const msg = t('toast_link_opened');
       this.showToast(msg, 'info');
     },
 
     reloadInventory: function () {
-      const msg = window.i18n ? window.i18n.t('toast_reload') : 'Kampanyalar ve envanter yenileniyor...';
+      const msg = t('toast_reload');
       this.showToast(msg, 'info');
       if (window.pywebview && window.pywebview.api) {
         window.pywebview.api.reload_campaigns();

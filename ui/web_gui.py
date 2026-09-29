@@ -55,7 +55,7 @@ class DummyTray:
 class StatusProxy:
     def __init__(self, manager: WebGUIManager):
         self._manager = manager
-        self.last_text = "Başlatılıyor..."
+        self.last_text = "Starting..."
 
     def update(self, text: str = "", *args, **kwargs):
         self.last_text = str(text)
@@ -63,8 +63,27 @@ class StatusProxy:
         state = "active" if any(w in lower_t for w in ("mining", "izleniyor", "watching", "aktif")) else (
             "connecting" if any(w in lower_t for w in ("gathering", "bağlanılıyor", "switching", "taranıyor", "cleanup")) else "idle"
         )
+        key = None
+        if any(w in lower_t for w in ("start", "başlat")):
+            key = "status_starting"
+        elif any(w in lower_t for w in ("gathering", "taranıyor")):
+            key = "status_gathering"
+        elif any(w in lower_t for w in ("switching", "geçiliyor")):
+            key = "status_switching"
+        elif any(w in lower_t for w in ("cleanup", "temizle")):
+            key = "status_cleanup"
+        elif any(w in lower_t for w in ("mining active", "madencilik aktif")):
+            key = "status_mining_active"
+        elif any(w in lower_t for w in ("mining paused", "madencilik duraklatıldı")):
+            key = "status_mining_paused"
+        elif any(w in lower_t for w in ("session closed", "oturum kapatıldı")):
+            key = "status_session_closed"
+        elif any(w in lower_t for w in ("idle", "boşta")):
+            key = "status_idle"
+
         self._manager.emit("status", {
             "text": self.last_text,
+            "key": key,
             "state": state,
             "is_running": self._manager._is_mining_running
         })
@@ -79,7 +98,7 @@ class WebsocketProxy:
 
     def update(self, idx: int, status: str | None = None, topics: int | None = None, *args, **kwargs):
         if idx not in self._items:
-            self._items[idx] = {"status": "Bağlandı", "topics": 0}
+            self._items[idx] = {"status": "Connected", "topics": 0}
         if status is not None:
             self._items[idx]["status"] = str(status)
         if topics is not None:
@@ -122,7 +141,7 @@ class LoginProxy:
         self.user_id = user_id
         if user_id:
             self._manager.emit("login_success", {
-                "username": f"Kullanıcı #{user_id}",
+                "username": f"User #{user_id}",
                 "user_id": user_id
             })
             self._manager.print(f"Twitch Girişi Başarılı! (Kullanıcı ID: {user_id})")
@@ -135,7 +154,7 @@ class LoginProxy:
     def set_logged_in(self, username: str = "", user_id: int | None = None):
         self.user_id = user_id
         self._manager.emit("login_success", {
-            "username": username or (f"Kullanıcı #{user_id}" if user_id else "Twitch Hesabı"),
+            "username": username or (f"User #{user_id}" if user_id else ""),
             "user_id": user_id
         })
 
@@ -291,7 +310,7 @@ class ChannelsProxy:
             "game": getattr(channel.game, "name", "") if channel.game else "",
             "viewers": getattr(channel, "viewers", 0) or 0,
             "live": getattr(channel, "online", True),
-            "uptime": "Canlı",
+            "uptime": "Live",
             "avatar": avatar_url
         })
         self._emit_channels()
@@ -299,7 +318,7 @@ class ChannelsProxy:
     def clear_watching(self):
         self._watching_channel = None
         self._manager.emit("watching", {
-            "name": "Yayıncı Bekleniyor...",
+            "name": "",
             "game": "-",
             "viewers": 0,
             "live": False,
@@ -432,7 +451,7 @@ class AppBridge:
 
     def toggle_mining(self):
         self._manager._is_mining_running = not self._manager._is_mining_running
-        status_text = "Madencilik Aktif" if self._manager._is_mining_running else "Madencilik Duraklatıldı"
+        status_text = "Mining Active" if self._manager._is_mining_running else "Mining Paused"
         self._manager.status.update(status_text)
 
     def reload_campaigns(self):
@@ -542,7 +561,7 @@ class AppBridge:
         except Exception:
             pass
         self._manager.print("Oturum kapatıldı, çerezler silindi.")
-        self._manager.status.update("Oturum Kapatıldı — Giriş Gerekli")
+        self._manager.status.update("Session Closed — Login Required")
         self._manager.login.set_logged_out()
 
     def start_twitch_login(self):
@@ -576,7 +595,7 @@ class AppBridge:
         try:
             clean_token = token.strip()
             if not clean_token:
-                return {"success": False, "error": "Boş token girilemez."}
+                return {"success": False, "error": "Token cannot be empty."}
             asyncio.run_coroutine_threadsafe(
                 self._async_save_manual_token(clean_token),
                 self._manager.loop
@@ -605,7 +624,7 @@ class AppBridge:
             await twitch.reload_campaigns()
         except Exception as exc:
             logger.error(f"Manual token error: {exc}")
-            self._manager.emit("login_error", {"error": f"Token doğrulanamadı: {exc}"})
+            self._manager.emit("login_error", {"error": f"Token validation error: {exc}"})
 
     def confirm_login_code(self):
         self._manager.login.confirm_login()
@@ -620,10 +639,10 @@ class AppBridge:
             if auth and hasattr(auth, "user_id"):
                 logged_in = True
                 user_id = auth.user_id
-                username = f"Kullanıcı #{user_id}"
+                username = f"User #{user_id}"
             elif COOKIES_PATH.exists():
                 logged_in = True
-                username = "Bağlı Oturum (Kayıtlı Çerezler)"
+                username = ""
         except Exception:
             pass
         return {"logged_in": logged_in, "username": username, "user_id": user_id}
@@ -697,8 +716,8 @@ class WebGUIManager:
 
     def clear_drop(self):
         self.emit("drop_progress", {
-            "drop_name": "Şu anda ilerleyen bir drop yok",
-            "campaign_title": "BEKLEMEDE",
+            "drop_name": "",
+            "campaign_title": "",
             "image_url": "",
             "current_minutes": 0,
             "required_minutes": 0,
